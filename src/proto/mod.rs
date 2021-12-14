@@ -1,5 +1,6 @@
 //! Pieces pertaining to the HTTP message protocol.
 
+use bytes::Bytes;
 cfg_feature! {
     #![feature = "http1"]
 
@@ -25,6 +26,10 @@ pub(crate) struct MessageHead<S> {
     pub(crate) subject: S,
     /// Headers of the Incoming message.
     pub(crate) headers: http::HeaderMap,
+    /// Parsed http1 reason phrase if different from canonical reason
+    #[cfg(feature = "http1_reason_phrase")]
+    pub(crate) reason_phrase: Option<Bytes>,
+
     /// Extensions.
     extensions: http::Extensions,
 }
@@ -66,6 +71,7 @@ impl MessageHead<http::StatusCode> {
         *res.headers_mut() = self.headers;
         *res.version_mut() = self.version;
         *res.extensions_mut() = self.extensions;
+        *res.reason_phrase_mut() = self.reason_phrase;
         res
     }
 }
