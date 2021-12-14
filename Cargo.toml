@@ -27,11 +27,11 @@ bytes = "1"
 futures-core = { version = "0.3", default-features = false }
 futures-channel = "0.3"
 futures-util = { version = "0.3", default-features = false }
-http = "0.2"
-http-body = "0.4"
+http = { git = "https://github.com/nickshiling/http.git", branch = "status-reason-parsing-support" }
+http-body = { git = "https://github.com/nickshiling/http-body.git", branch = "status-reason-parsing-support" }
 httpdate = "1.0"
 httparse = "1.5.1"
-h2 = { version = "0.3.9", optional = true }
+h2 = { git = "https://github.com/nickshiling/h2.git", branch = "status-reason-parsing-support", optional = true }
 itoa = "1"
 tracing = { version = "0.1", default-features = false, features = ["std"] }
 pin-project-lite = "0.2.4"
@@ -83,6 +83,7 @@ full = [
     "server",
     "stream",
     "runtime",
+    "http1_reason_phrase"
 ]
 
 # HTTP versions
@@ -111,6 +112,8 @@ tcp = [
 
 # C-API support (currently unstable (no semver))
 ffi = ["libc"]
+
+http1_reason_phrase = ["http1"]
 
 # internal features used in CI
 nightly = []
