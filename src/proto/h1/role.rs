@@ -1,15 +1,20 @@
 use std::fmt::{self, Write};
 use std::mem::MaybeUninit;
 
-#[cfg(all(feature = "server", feature = "runtime"))]
-use tokio::time::Instant;
-#[cfg(any(test, feature = "server", feature = "ffi"))]
+#[cfg(any(
+    test,
+    feature = "server",
+    feature = "ffi",
+    feature = "http1_reason_phrase"
+))]
 use bytes::Bytes;
 use bytes::BytesMut;
 #[cfg(feature = "server")]
 use http::header::ValueIter;
 use http::header::{self, Entry, HeaderName, HeaderValue};
 use http::{HeaderMap, Method, StatusCode, Version};
+#[cfg(all(feature = "server", feature = "runtime"))]
+use tokio::time::Instant;
 use tracing::{debug, error, trace, trace_span, warn};
 
 use crate::body::DecodedLength;
@@ -313,7 +318,7 @@ impl Http1Transaction for Server {
                 headers,
                 extensions,
                 #[cfg(feature = "http1_reason_phrase")]
-                reason_phrase: None
+                reason_phrase: None,
             },
             decode: decoder,
             expect_continue,
@@ -920,9 +925,9 @@ impl Http1Transaction for Client {
                         trace!("Response.parse Complete({})", len);
                         let status = StatusCode::from_u16(res.code.unwrap())?;
 
-                        #[cfg(not(any(feature = "ffi", feature="http1_reason_phrase")))]
+                        #[cfg(not(any(feature = "ffi", feature = "http1_reason_phrase")))]
                         let reason = ();
-                        #[cfg(any(feature = "ffi", feature="http1_reason_phrase"))]
+                        #[cfg(any(feature = "ffi", feature = "http1_reason_phrase"))]
                         let reason = {
                             let reason = res.reason.unwrap();
                             // Only save the reason phrase if it isnt the canonical reason
@@ -946,9 +951,9 @@ impl Http1Transaction for Client {
                     Err(httparse::Error::Version) if ctx.h09_responses => {
                         trace!("Response.parse accepted HTTP/0.9 response");
 
-                        #[cfg(not(any(feature = "ffi", feature="http1_reason_phrase")))]
+                        #[cfg(not(any(feature = "ffi", feature = "http1_reason_phrase")))]
                         let reason = ();
-                        #[cfg(any(feature = "ffi", feature="http1_reason_phrase"))]
+                        #[cfg(any(feature = "ffi", feature = "http1_reason_phrase"))]
                         let reason = None;
 
                         (0, StatusCode::OK, reason, Version::HTTP_09, 0)
@@ -1018,7 +1023,7 @@ impl Http1Transaction for Client {
                 headers,
                 extensions,
                 #[cfg(feature = "http1_reason_phrase")]
-                reason_phrase: reason
+                reason_phrase: reason,
             };
             if let Some((decode, is_upgrade)) = Client::decoder(&head, ctx.req_method)? {
                 return Ok(Some(ParsedMessage {
