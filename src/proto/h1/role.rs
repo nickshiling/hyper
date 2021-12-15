@@ -81,21 +81,22 @@ where
 
     #[cfg(all(feature = "server", feature = "runtime"))]
     if !*ctx.h1_header_read_timeout_running {
-    if let Some(h1_header_read_timeout) = ctx.h1_header_read_timeout {
-        let deadline = Instant::now() + h1_header_read_timeout;
+        if let Some(h1_header_read_timeout) = ctx.h1_header_read_timeout {
+            let deadline = Instant::now() + h1_header_read_timeout;
 
-        match ctx.h1_header_read_timeout_fut {
-            Some(h1_header_read_timeout_fut) => {
-                debug!("resetting h1 header read timeout timer");
-                h1_header_read_timeout_fut.as_mut().reset(deadline);
-            },
-            None => {
-                debug!("setting h1 header read timeout timer");
-                *ctx.h1_header_read_timeout_fut = Some(Box::pin(tokio::time::sleep_until(deadline)));
+            match ctx.h1_header_read_timeout_fut {
+                Some(h1_header_read_timeout_fut) => {
+                    debug!("resetting h1 header read timeout timer");
+                    h1_header_read_timeout_fut.as_mut().reset(deadline);
+                }
+                None => {
+                    debug!("setting h1 header read timeout timer");
+                    *ctx.h1_header_read_timeout_fut =
+                        Some(Box::pin(tokio::time::sleep_until(deadline)));
+                }
             }
         }
     }
-}
 
     T::parse(bytes, ctx)
 }
@@ -587,7 +588,7 @@ impl Server {
     #[inline]
     fn encode_headers<W>(
         msg: Encode<'_, StatusCode>,
-        mut dst: &mut Vec<u8>,
+        dst: &mut Vec<u8>,
         mut is_last: bool,
         orig_len: usize,
         mut wrote_len: bool,
@@ -844,7 +845,7 @@ impl Server {
                             "content-length: ",
                             header::CONTENT_LENGTH,
                         );
-                        let _ = ::itoa::write(&mut dst, len);
+                        extend(dst, ::itoa::Buffer::new().format(len).as_bytes());
                         extend(dst, b"\r\n");
                         Encoder::length(len)
                     }
