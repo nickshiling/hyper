@@ -72,7 +72,9 @@ impl MessageHead<http::StatusCode> {
         *res.version_mut() = self.version;
         *res.extensions_mut() = self.extensions;
         #[cfg(feature = "http1_reason_phrase")]
-        *res.reason_phrase_mut() = self.reason_phrase;
+        {
+            *res.reason_phrase_mut() = self.reason_phrase;
+        }
         res
     }
 }
